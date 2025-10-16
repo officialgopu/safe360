@@ -74,3 +74,4 @@ npm run dev
 - API documentation is available at `/docs` when the backend server is running
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
+till nowq we done alert submission done
