@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import alerts, users, locations
+from app.routers import alerts, users, locations, firebase_alerts, alert_submission
 from app.database.connection import engine, Base
 from app.firebase.config import initialize_firebase
 
@@ -16,7 +16,7 @@ app = FastAPI(
 # CORS Configuration for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],  # Your frontend URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,6 +36,8 @@ async def startup_event():
 app.include_router(alerts.router)
 app.include_router(users.router)
 app.include_router(locations.router)
+app.include_router(firebase_alerts.router)
+app.include_router(alert_submission.router)
 
 @app.get("/")
 def read_root():

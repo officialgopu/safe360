@@ -104,12 +104,20 @@ const AlertSubmissionForm = ({ onSubmitSuccess }: AlertSubmissionFormProps) => {
         submitData.append("other_category", formData.otherCategory);
       }
 
-      // Add files if any
+      // Add verification flag
+      submitData.append("is_verified", formData.isVerified.toString());
+
+      // Add files and their captions if any
       formData.files.forEach((file) => {
         submitData.append("files", file);
       });
+      
+      // Add file captions as a JSON string
+      if (formData.fileCaptions.length > 0) {
+        submitData.append("file_captions", JSON.stringify(formData.fileCaptions));
+      }
 
-      // Submit to backend
+      // Submit to backend using API service
       const response = await fetch("http://127.0.0.1:8000/submit-alert", {
         method: "POST",
         body: submitData,

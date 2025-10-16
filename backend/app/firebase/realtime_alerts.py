@@ -13,12 +13,12 @@ class FirebaseAlertService:
     def create_alert(self, alert_data: Dict[str, Any]) -> str:
         """Create a new real-time alert in Firebase"""
         try:
-            alert_id = self.alerts_ref.push().key
+            alert_id = self.ref.push().key
             alert_data['id'] = alert_id
             alert_data['timestamp'] = datetime.utcnow().isoformat()
             alert_data['status'] = 'active'
             
-            self.alerts_ref.child(alert_id).set(alert_data)
+            self.ref.child(alert_id).set(alert_data)
             return alert_id
         except Exception as e:
             print(f"Error creating alert: {e}")
@@ -27,7 +27,7 @@ class FirebaseAlertService:
     def get_all_alerts(self) -> Optional[Dict]:
         """Get all active alerts from Firebase"""
         try:
-            return self.alerts_ref.get()
+            return self.ref.get()
         except Exception as e:
             print(f"Error getting alerts: {e}")
             return None
@@ -35,7 +35,7 @@ class FirebaseAlertService:
     def get_alert(self, alert_id: str) -> Optional[Dict]:
         """Get specific alert by ID"""
         try:
-            return self.alerts_ref.child(alert_id).get()
+            return self.ref.child(alert_id).get()
         except Exception as e:
             print(f"Error getting alert: {e}")
             return None
@@ -43,7 +43,7 @@ class FirebaseAlertService:
     def update_alert(self, alert_id: str, update_data: Dict[str, Any]) -> bool:
         """Update existing alert"""
         try:
-            self.alerts_ref.child(alert_id).update(update_data)
+            self.ref.child(alert_id).update(update_data)
             return True
         except Exception as e:
             print(f"Error updating alert: {e}")
@@ -52,7 +52,7 @@ class FirebaseAlertService:
     def delete_alert(self, alert_id: str) -> bool:
         """Delete alert from Firebase"""
         try:
-            self.alerts_ref.child(alert_id).delete()
+            self.ref.child(alert_id).delete()
             return True
         except Exception as e:
             print(f"Error deleting alert: {e}")
@@ -61,7 +61,7 @@ class FirebaseAlertService:
     def get_active_alerts(self) -> Dict:
         """Get only active alerts"""
         try:
-            all_alerts = self.alerts_ref.get()
+            all_alerts = self.ref.get()
             if not all_alerts:
                 return {}
             

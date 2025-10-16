@@ -24,6 +24,8 @@ async def submit_alert(
     longitude: float = Form(0.0),
     other_category: Optional[str] = Form(None),
     files: Optional[List[UploadFile]] = File(None),
+    file_captions: Optional[str] = Form(None),  # JSON string of captions
+    is_verified: bool = Form(True),  # Default to True for backward compatibility
     db: Session = Depends(get_db)
 ):
     """
@@ -31,6 +33,12 @@ async def submit_alert(
     This endpoint matches your frontend AlertSubmissionForm
     """
     try:
+        print("📝 Received alert submission with data:", {
+            "category": category,
+            "pincode": pincode,
+            "city": city,
+            "urgency_level": urgency_level
+        })
         # Map urgency to severity
         severity_map = {
             "low": "low",
@@ -69,6 +77,30 @@ async def submit_alert(
         db.add(db_alert)
         db.commit()
         db.refresh(db_alert)
+        
+        # Handle file captions if provided
+        captions = []
+        if file_captions:
+            try:
+                captions = json.loads(file_captions)
+            except json.JSONDecodeError:
+                pass
+
+        # Process files if provided
+        file_info = []
+        if files:
+            for i, file in enumerate(files):
+                caption = captions[i] if i < len(captions) else ""
+                file_info.append({
+                    "filename": file.filename,
+                    "caption": caption,
+                    # You can add file upload logic here
+                    # For example, save to cloud storage and store URL
+                })
+        
+        # Update alert data with file info and verification
+        alert_data["files"] = file_info
+        alert_data["is_verified"] = is_verified
         
         # Save to Firebase (real-time)
         firebase_alert_id = firebase_service.create_alert(alert_data)
