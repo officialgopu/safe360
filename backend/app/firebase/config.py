@@ -13,7 +13,7 @@ def initialize_firebase():
         
         # Check if file exists
         if not os.path.exists(creds_path):
-            print(f"❌ Firebase credentials file not found at: {creds_path}")
+            print(f" Firebase credentials file not found at: {creds_path}")
             print("Please download firebase-credentials.json and place it in the backend folder")
             return False
         
@@ -23,14 +23,14 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred, {
                 'databaseURL': 'https://preact-49c27-default-rtdb.asia-southeast1.firebasedatabase.app'
             })
-            print("✅ Firebase initialized successfully!")
+            print(" Firebase initialized successfully!")
             return True
         else:
-            print("ℹ️ Firebase already initialized")
+            print(" Firebase already initialized")
             return True
             
     except Exception as e:
-        print(f"❌ Firebase initialization error: {e}")
+        print(f" Firebase initialization error: {e}")
         return False
 
 def get_firebase_db():
@@ -38,5 +38,5 @@ def get_firebase_db():
     try:
         return db.reference()
     except Exception as e:
-        print(f"❌ Error getting Firebase database: {e}")
+        print(f" Error getting Firebase database: {e}")
         return None

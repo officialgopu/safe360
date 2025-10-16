@@ -22,7 +22,7 @@ const Login = () => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!role || !userId || !password) {
@@ -30,9 +30,32 @@ const Login = () => {
       return;
     }
 
-    // Simulate login
-    alert(`Welcome, ${role}!`);
-    navigate("/alerts");
+    try {
+      if (role === 'admin') {
+        // For demo purposes, check if using default admin credentials
+        if (userId === 'admin' && password === 'admin123') {
+          // Store admin token
+          localStorage.setItem('auth_token', 'admin-token');
+          localStorage.setItem('user_role', 'admin');
+          navigate("/admin");
+          return;
+        }
+      }
+      
+      // For other roles, navigate to their respective dashboards
+      switch (role) {
+        case 'police':
+          navigate("/police/dashboard");
+          break;
+        case 'ngo':
+          navigate("/ngo/dashboard");
+          break;
+        default:
+          navigate("/alerts");
+      }
+    } catch (error) {
+      alert("Invalid credentials. Please try again.");
+    }
   };
 
   return (
@@ -48,6 +71,9 @@ const Login = () => {
             <CardDescription className="text-muted-foreground">
               Select your role and login to access the system
             </CardDescription>
+            <p className="text-sm text-muted-foreground mt-2">
+              For demo: Admin access (ID: admin / Password: admin123)
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
