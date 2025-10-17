@@ -1,6 +1,7 @@
 import AdminLayout from '../components/admin/AdminLayout';
 import DashboardOverview from '../components/admin/DashboardOverview';
 import { Card, Title } from '@tremor/react';
+import AdminMap from "../components/admin/AdminMap";
 
 const AdminDashboard = () => {
   return (
@@ -22,7 +23,7 @@ const AdminDashboard = () => {
         <Card className="h-96">
           <Title>Real-Time Threat Map</Title>
           <div className="h-full flex items-center justify-center text-gray-500">
-            Map Component will be implemented here
+            <AdminMap />
           </div>
         </Card>
 

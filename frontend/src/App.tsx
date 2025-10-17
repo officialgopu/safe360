@@ -14,6 +14,7 @@ import ActiveAlerts from "./pages/ActiveAlerts";
 import ManageUsers from "./pages/ManageUsers";
 import AIInsights from "./pages/AIInsights";
 
+
 const queryClient = new QueryClient();
 
 const App = () => {

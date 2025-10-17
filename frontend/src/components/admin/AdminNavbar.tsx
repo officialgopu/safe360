@@ -3,6 +3,8 @@ import { Menu, Transition } from '@headlessui/react';
 import { BellIcon, Bars3Icon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
+import emblemImg from '@/assets/images/emblem.svg';
+import adminAvatar from '@/assets/images/admin-avatar.svg';
 
 interface AdminNavbarProps {
   onMenuClick: () => void;
@@ -31,12 +33,12 @@ const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
             
             <div className="ml-4 flex items-center space-x-4">
               <img
-                src="/government-emblem.png"
-                alt="Government Emblem"
-                className="h-8 w-8"
+                src={emblemImg}
+                alt="India Emblem"
+                className="h-10 w-10 text-indigo-600 dark:text-indigo-400"
               />
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white hidden sm:block">
-                Community Alert Threat System
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white hidden sm:block ml-3">
+                Safe360 Admin Portal
               </h1>
             </div>
           </div>
@@ -63,14 +65,16 @@ const AdminNavbar = ({ onMenuClick }: AdminNavbarProps) => {
             {/* Profile Dropdown */}
             <Menu as="div" className="relative">
               <Menu.Button className="flex items-center space-x-3 hover:text-gray-700 dark:hover:text-gray-300">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src="https://via.placeholder.com/40"
-                  alt="Admin"
-                />
-                <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Admin User
-                </span>
+                <div className="flex items-center">
+                  <img
+                    className="h-9 w-9 rounded-full bg-indigo-100 p-1"
+                    src={adminAvatar}
+                    alt="Admin"
+                  />
+                  <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300 ml-2">
+                    Administrator
+                  </span>
+                </div>
               </Menu.Button>
 
               <Transition

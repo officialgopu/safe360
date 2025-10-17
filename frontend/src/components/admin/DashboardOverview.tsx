@@ -8,6 +8,8 @@ import {
   UserGroupIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import DashboardCharts from './DashboardCharts';
+import StatusMonitoring from './StatusMonitoring';
 import adminApi, { OverviewStats } from '../../services/adminApi';
 
 const DashboardOverview = () => {
@@ -111,34 +113,42 @@ const DashboardOverview = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {metrics.map((item) => (
-        <Card
-          key={item.title}
-          decoration="top"
-          decorationColor={item.color}
-          className="space-y-2"
-        >
-          <div className="flex items-center space-x-2">
-            <item.icon className={`h-6 w-6 text-${item.color}-500`} />
-            <Text>{item.title}</Text>
-          </div>
-          <div className="space-y-1">
-            <Metric>
-              {item.metric}
-              {item.suffix}
-            </Metric>
-            {item.change && (
-              <BadgeDelta
-                deltaType={item.changeType === 'increase' ? 'increase' : 'decrease'}
-                size="sm"
-              >
-                {item.change}
-              </BadgeDelta>
-            )}
-          </div>
-        </Card>
-      ))}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {metrics.map((item) => (
+          <Card
+            key={item.title}
+            decoration="top"
+            decorationColor={item.color}
+            className="space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <item.icon className={`h-6 w-6 text-${item.color}-500`} />
+              <Text>{item.title}</Text>
+            </div>
+            <div className="space-y-1">
+              <Metric>
+                {item.metric}
+                {item.suffix}
+              </Metric>
+              {item.change && (
+                <BadgeDelta
+                  deltaType={item.changeType === 'increase' ? 'increase' : 'decrease'}
+                  size="sm"
+                >
+                  {item.change}
+                </BadgeDelta>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Charts Section */}
+      <DashboardCharts />
+
+      {/* Status Monitoring */}
+      <StatusMonitoring />
     </div>
   );
 };
