@@ -2,9 +2,32 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 from datetime import datetime, timedelta
+from pydantic import BaseModel
+from passlib.context import CryptContext
 from app.database.connection import get_db
 from app.models.user import User
 from app.models.alert import Alert
+from app.ml import ml_service, ML_AVAILABLE
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# User schemas for request validation
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+    full_name: str | None = None
+    phone: str | None = None
+    role: str = "user"
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: str | None = None
+    full_name: str | None = None
+    phone: str | None = None
+    role: str | None = None
+    is_active: bool | None = None
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -341,6 +364,193 @@ def get_map_alerts(db: Session = Depends(get_db)):
             })
         
         return {"alerts": map_data, "total": len(map_data)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+# ==================== ML PREDICTIONS ====================
+class RiskFactor(BaseModel):
+    name: str
+    weight: float
+
+class PredictionResponse(BaseModel):
+    risk_score: float
+    confidence: float
+    factors: list[RiskFactor]
+    recommendations: list[str]
+
+class CrimePredictionRequest(BaseModel):
+    population_density: float = 1000
+    unemployment_rate: float = 5.0
+    income_level: float = 50000
+    prior_incidents: int = 0
+    location_risk: float = 0.5
+    economic_stress: float = 0.5
+    is_night: int = 0
+    is_weekend: int = 0
+
+class WeatherPredictionRequest(BaseModel):
+    temperature: float = 25          # Temperature in Celsius
+    precipitation: float = 0         # Precipitation in mm
+    wind_speed: float = 10          # Wind speed in km/h
+    humidity: float = 60            # Relative humidity %
+    weather_encoded: int = 0        # Encoded weather type
+    hour: int = 12                  # Hour of the day (0-23)
+    month: int = 6                  # Month (1-12)
+    pressure: float = 1013.25       # Air pressure in hPa
+    visibility: float = 10          # Visibility in km
+    wind_direction: float = 180     # Wind direction in degrees
+    cloud_cover: float = 50         # Cloud cover percentage
+
+class FraudPredictionRequest(BaseModel):
+    amount: float = 1000
+    victim_income: float = 50000
+    previous_frauds: int = 0
+    detection_time_hours: float = 24
+    fraud_type_encoded: int = 0
+    channel_encoded: int = 0
+
+class HeatmapLocation(BaseModel):
+    lat: float
+    lng: float
+    area_name: str
+    area_data: dict[str, float | int]
+
+@router.post("/predict/crime", response_model=PredictionResponse)
+def predict_crime(data: CrimePredictionRequest):
+    """
+    Predict crime risk using ML model.
+    
+    Uses demographic data and location factors to generate a risk assessment
+    for potential criminal activity in an area.
+    
+    Returns:
+        PredictionResponse with:
+        - risk_score: Float between 0-1 indicating crime risk level
+        - confidence: Model confidence score
+        - factors: List of contributing risk factors and their weights
+        - recommendations: List of suggested preventive actions
+    """
+    if not ML_AVAILABLE or ml_service is None:
+        raise HTTPException(status_code=503, detail="ML service not available")
+    try:
+        result = ml_service.predict_crime_risk(data.dict())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@router.post("/predict/weather", response_model=PredictionResponse)
+def predict_weather(data: WeatherPredictionRequest):
+    """
+    Predict weather-related incident risk using ML model.
+    
+    Analyzes meteorological data to predict the likelihood of 
+    weather-related emergencies or natural disasters.
+    
+    Returns:
+        PredictionResponse with:
+        - risk_score: Float between 0-1 indicating weather risk level
+        - confidence: Model confidence score
+        - factors: List of contributing weather factors and their weights
+        - recommendations: List of suggested safety measures
+    """
+    if not ML_AVAILABLE or ml_service is None:
+        raise HTTPException(status_code=503, detail="ML service not available")
+    try:
+        result = ml_service.predict_weather_risk(data.dict())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@router.post("/predict/fraud", response_model=PredictionResponse)
+def predict_fraud(data: FraudPredictionRequest):
+    """
+    Predict fraud risk using ML model.
+    
+    Evaluates transaction data and victim profile to assess the likelihood
+    of fraudulent activity and potential financial risk.
+    
+    Returns:
+        PredictionResponse with:
+        - risk_score: Float between 0-1 indicating fraud risk level
+        - confidence: Model confidence score
+        - factors: List of contributing risk factors and their weights
+        - recommendations: List of suggested preventive measures
+    """
+    if not ML_AVAILABLE or ml_service is None:
+        raise HTTPException(status_code=503, detail="ML service not available")
+    try:
+        result = ml_service.predict_fraud_risk(data.dict())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+class HeatmapResponse(BaseModel):
+    heatmap: list[HeatmapLocation]
+    total_areas: int
+    last_updated: datetime
+    alert_density: dict[str, int]
+
+@router.get("/map/heatmap", response_model=HeatmapResponse)
+def get_heatmap_data(db: Session = Depends(get_db)):
+    """
+    Generate risk heatmap data for map visualization.
+    
+    Combines historical alert data with ML predictions to create a 
+    risk heatmap overlay for the map interface. Also provides alert
+    density statistics by area.
+    
+    Returns:
+        HeatmapResponse containing:
+        - heatmap: List of locations with risk scores and metadata
+        - total_areas: Number of areas analyzed
+        - last_updated: Timestamp of the last data update
+        - alert_density: Count of alerts by area/region
+    """
+    try:
+        # Get all active alerts with coordinates
+        alerts = db.query(Alert).filter(
+            Alert.latitude.isnot(None),
+            Alert.longitude.isnot(None)
+        ).all()
+        
+        # Prepare location data for ML predictions
+        locations = []
+        alert_counts: dict[str, int] = {}
+        
+        for alert in alerts:
+            area_name = alert.location_name or "Unknown"
+            alert_counts[area_name] = alert_counts.get(area_name, 0) + 1
+            
+            locations.append(HeatmapLocation(
+                lat=alert.latitude,
+                lng=alert.longitude,
+                area_name=area_name,
+                area_data={
+                    "population_density": 1500,  # Default values - you can fetch real data
+                    "unemployment_rate": 6.0,
+                    "income_level": 45000,
+                    "prior_incidents": alert_counts[area_name],
+                    "location_risk": 0.6,
+                    "economic_stress": 0.5,
+                    "is_night": 0,
+                    "is_weekend": 0
+                }
+            ))
+        
+        # Get risk scores from ML model
+        if not ML_AVAILABLE or ml_service is None:
+            raise HTTPException(status_code=503, detail="ML service not available")
+            
+        heatmap_data = ml_service.get_area_risk_scores(locations)
+        
+        return HeatmapResponse(
+            heatmap=heatmap_data,
+            total_areas=len(heatmap_data),
+            last_updated=datetime.utcnow(),
+            alert_density=alert_counts
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
