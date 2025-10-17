@@ -3,5 +3,6 @@ from app.routers import (
     users,
     locations,
     firebase_alerts,
-    alert_submission
+    alert_submission,
+    admin  
 )

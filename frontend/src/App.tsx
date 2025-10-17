@@ -10,6 +10,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ActiveAlerts from "./pages/ActiveAlerts";
+import ManageUsers from "./pages/ManageUsers";
+import AIInsights from "./pages/AIInsights";
 
 const queryClient = new QueryClient();
 
@@ -39,17 +42,17 @@ const App = () => {
             } />
             <Route path="/admin/alerts" element={
               <ProtectedRoute requireAdmin>
-                <AdminDashboard />
+                <ActiveAlerts />
               </ProtectedRoute>
             } />
             <Route path="/admin/users" element={
               <ProtectedRoute requireAdmin>
-                <AdminDashboard />
+                <ManageUsers />
               </ProtectedRoute>
             } />
             <Route path="/admin/insights" element={
               <ProtectedRoute requireAdmin>
-                <AdminDashboard />
+                <AIInsights />
               </ProtectedRoute>
             } />
             <Route path="/admin/reports" element={
